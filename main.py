@@ -51,6 +51,10 @@ def run_fuzzing(conf, st_read_fd, ctl_write_fd, trace_bits):
         # run the target with the seed
         status_code, exec_time = run_target(ctl_write_fd, st_read_fd, trace_bits)
 
+        if status_code == 9:
+            print(f"Seed {seed_file} caused a timeout during the dry run")
+            sys.exit(0)
+
         if check_crash(status_code):
             print(f"Seed {seed_file} caused a crash during the dry run")
             sys.exit(0)
@@ -74,6 +78,10 @@ def run_fuzzing(conf, st_read_fd, ctl_write_fd, trace_bits):
             havoc_mutation(conf, selected_seed)
             # run the target with the mutated seed
             status_code, exec_time = run_target(ctl_write_fd, st_read_fd, trace_bits)
+
+            if status_code == 9:
+                print("Timeout, skipping this input")
+                continue
 
             if check_crash(status_code):
                 print(f"Found a crash, status code is {status_code}")
