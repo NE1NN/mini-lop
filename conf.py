@@ -16,7 +16,7 @@ def parse_config(config_file):
             print("Seeds folder does not exist")
             return False, conf_dict
 
-        if os.listdir(conf_dict['seeds_folder']) == 0:
+        if len(os.listdir(conf_dict['seeds_folder'])) == 0:
             print("Seeds folder is empty")
             return False, conf_dict
 
