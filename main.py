@@ -89,6 +89,8 @@ def run_fuzzing(conf, st_read_fd, ctl_write_fd, trace_bits):
             if check_crash(status_code):
                 print(f"Found a crash, status code is {status_code}")
                 # TODO: save the crashing input
+                crash_path = os.path.join(conf["crashes_folder"], f"crash_{len(os.listdir(conf['crashes_folder']))}.bin")
+                shutil.copyfile(conf["current_input"], crash_path)
                 continue
 
             new_edge_covered, coverage = check_coverage(trace_bits, global_coverage)
