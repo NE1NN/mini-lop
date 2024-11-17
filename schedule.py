@@ -38,6 +38,8 @@ def select_next_seed(seed_queue, cycle_count):
 # get the power schedule (# of new test inputs to generate for a seed)
 def get_power_schedule(seed):
     # this is a dummy implementation, it just returns a random number
-    # TODO: implement the power schedule similar to AFL (should consider the coverage, and execution time)
-    return random.randint(1, 10)
-
+    # TODO: implement the power schedule similar to AFL (should consider the coverage, and execution time)    
+    score = seed.coverage / seed.exec_time
+    normalized_score = min(max(int(score * 10), 1), 10)
+    
+    return max(1, normalized_score + random.randint(-1, 1))
