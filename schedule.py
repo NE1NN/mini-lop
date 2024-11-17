@@ -36,10 +36,22 @@ def select_next_seed(seed_queue, cycle_count):
     return selected, cycle_count
 
 # get the power schedule (# of new test inputs to generate for a seed)
-def get_power_schedule(seed):
-    # this is a dummy implementation, it just returns a random number
-    # TODO: implement the power schedule similar to AFL (should consider the coverage, and execution time)    
-    score = seed.coverage / seed.exec_time
-    normalized_score = min(max(int(score * 10), 1), 10)
+def get_power_schedule(seed, avg_exec_time, avg_coverage):
+    # AFL's implementation without depth and handicap
+    exec_score = (
+        300 if seed.exec_time * 0.25 < avg_exec_time else
+        200 if seed.exec_time * 0.5 < avg_exec_time else
+        150 if seed.exec_time * 0.75 < avg_exec_time else
+        100 if seed.exec_time < avg_exec_time else
+        50 if seed.exec_time > avg_exec_time * 4 else 25
+    )
+    coverage_score = (
+        300 if seed.coverage > avg_coverage * 1.5 else
+        200 if seed.coverage > avg_coverage else
+        150 if seed.coverage > avg_coverage * 0.75 else
+        100
+    )
     
-    return max(1, normalized_score + random.randint(-1, 1))
+    combined_score = exec_score + coverage_score 
+    # Limit the score to 10
+    return max(1, min(int(combined_score / 10), 10))

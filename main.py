@@ -70,11 +70,22 @@ def run_fuzzing(conf, st_read_fd, ctl_write_fd, trace_bits):
         seed_queue.append(new_seed)
 
     print("Dry run finished. Now starting the fuzzing loop...")
+
+    total_exec_time = 0
+    total_coverage = 0
+    processed_seeds = 0
     # start the fuzzing loop
     while True:
         selected_seed, cycle_count = select_next_seed(seed_queue, cycle_count)
 
-        power_schedule = get_power_schedule(selected_seed)
+        if processed_seeds > 0:
+            avg_exec_time = total_exec_time / processed_seeds
+            avg_coverage = total_coverage / processed_seeds
+        else:
+            avg_exec_time = 1000
+            avg_coverage = 10
+
+        power_schedule = get_power_schedule(selected_seed, avg_exec_time, avg_coverage)
 
         # generate new test inputs according to the power schedule for the selected seed
         for i in range(0, power_schedule):
@@ -90,11 +101,17 @@ def run_fuzzing(conf, st_read_fd, ctl_write_fd, trace_bits):
             if check_crash(status_code):
                 print(f"Found a crash, status code is {status_code}")
                 # TODO: save the crashing input
-                crash_path = os.path.join(conf["crashes_folder"], f"crash_{len(os.listdir(conf['crashes_folder']))}.bin")
+                crash_path = os.path.join(
+                    conf["crashes_folder"], f"crash_{len(os.listdir(conf['crashes_folder']))}.bin"
+                )
                 shutil.copyfile(conf["current_input"], crash_path)
                 continue
 
             new_edge_covered, coverage = check_coverage(trace_bits, global_coverage)
+
+            total_exec_time += exec_time
+            total_coverage += coverage
+            processed_seeds += 1
 
             if new_edge_covered:
                 # Save the current test input as a new seed
