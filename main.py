@@ -82,6 +82,7 @@ def run_fuzzing(conf, st_read_fd, ctl_write_fd, trace_bits):
             avg_exec_time = total_exec_time / processed_seeds
             avg_coverage = total_coverage / processed_seeds
         else:
+            # Some default value
             avg_exec_time = 1000
             avg_coverage = 10
 
