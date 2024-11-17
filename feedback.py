@@ -6,6 +6,7 @@ SHM_ENV_VAR   = "__AFL_SHM_ID"
 MAP_SIZE_POW2 = 16
 MAP_SIZE = (1 << MAP_SIZE_POW2)
 
+global_coverage = set()
 
 def setup_shm(libc):
     # map functions
@@ -52,19 +53,32 @@ def check_crash(status_code):
 
 
 def check_coverage(trace_bits):
+    global global_coverage
+    
     raw_bitmap = ctypes.string_at(trace_bits, MAP_SIZE)
+    new_edge_covered = False
+    
+    local_coverage = set()
+    
     total_hits = 0
     new_edge_covered = False
+    
+    
+    for idx, byte in enumerate(raw_bitmap):
+        if byte != 0:
+            total_hits += 1 
+            if idx not in global_coverage:
+                new_edge_covered = True  
+                global_coverage.add(idx) 
+                local_coverage.add(idx)
 
-    for i in raw_bitmap:
-        # TODO: maintain a global coverage of all seeds, check if this seed covers a new edge
-        if i != 0:
-            total_hits += 1
-    print(f'covered {total_hits} edges')
-
-    # this is a dummy implementation for demonstration purpose (add some variation for new edges)
-    # should remove this once implemented the real logic of checking new edges
-    if total_hits % 2 == 0:
-        new_edge_covered = True
-
+    print(f'Covered {total_hits} edges. New edges: {len(local_coverage)}')
+    print(f"Global coverage: {len(global_coverage)} edges discovered")    
+        
     return new_edge_covered, total_hits
+
+# def save_new_seed(queue_folder, seed_data):
+#     seed_file = f"{queue_folder}/seed_{len(global_coverage)}.bin"
+#     with open(seed_file, "wb") as f:
+#         f.write(seed_data)
+#     print(f"Saved new seed to {seed_file}")

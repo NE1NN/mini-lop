@@ -1,12 +1,16 @@
 import argparse
 import signal
-from conf import *
-from libc import *
-from feedback import *
-from execution import *
-from seed import *
-from schedule import *
-from mutation import *
+import sys
+import os
+import shutil
+
+from conf import parse_config
+from execution import run_target
+from feedback import SHM_ENV_VAR, check_coverage, check_crash, clear_shm, setup_shm
+from libc import get_libc
+from mutation import havoc_mutation
+from schedule import get_power_schedule, select_next_seed
+from seed import Seed
 
 
 FORKSRV_FD = 198
@@ -14,7 +18,7 @@ FORKSRV_FD = 198
 
 # listen for user's signal
 def signal_handler(sig, frame):
-    print('You pressed Ctrl+C! Ending the fuzzing session...')
+    print("You pressed Ctrl+C! Ending the fuzzing session...")
     sys.exit(0)
 
 
@@ -22,17 +26,17 @@ def run_forkserver(conf, ctl_read_fd, st_write_fd):
     os.dup2(ctl_read_fd, FORKSRV_FD)
     os.dup2(st_write_fd, FORKSRV_FD + 1)
     # prepare command
-    cmd = [conf['target']] + conf['target_args']
+    cmd = [conf["target"]] + conf["target_args"]
     print(cmd)
-    print(f'shmid is {os.environ[SHM_ENV_VAR]}')
-    print(f'st_write_fd: {st_write_fd}')
+    print(f"shmid is {os.environ[SHM_ENV_VAR]}")
+    print(f"st_write_fd: {st_write_fd}")
 
     # eats stdout and stderr of the target
     dev_null_fd = os.open(os.devnull, os.O_RDWR)
     os.dup2(dev_null_fd, 1)
     os.dup2(dev_null_fd, 2)
 
-    os.execv(conf['target'], cmd)
+    os.execv(conf["target"], cmd)
 
 
 def run_fuzzing(conf, st_read_fd, ctl_write_fd, trace_bits):
@@ -43,11 +47,11 @@ def run_fuzzing(conf, st_read_fd, ctl_write_fd, trace_bits):
 
     seed_queue = []
     # do the dry run, check if the target is working and initialize the seed queue
-    shutil.copytree(conf['seeds_folder'], conf['queue_folder'])
-    for i, seed_file in enumerate(os.listdir(conf['queue_folder'])):
-        seed_path = os.path.join(conf['queue_folder'], seed_file)
+    shutil.copytree(conf["seeds_folder"], conf["queue_folder"])
+    for i, seed_file in enumerate(os.listdir(conf["queue_folder"])):
+        seed_path = os.path.join(conf["queue_folder"], seed_file)
         # copy the seed content to "current_input"
-        shutil.copyfile(seed_path, conf['current_input'])
+        shutil.copyfile(seed_path, conf["current_input"])
         # run the target with the seed
         status_code, exec_time = run_target(ctl_write_fd, st_read_fd, trace_bits)
 
@@ -61,8 +65,12 @@ def run_fuzzing(conf, st_read_fd, ctl_write_fd, trace_bits):
 
         new_edge_covered, coverage = check_coverage(trace_bits)
 
-        new_seed = Seed(seed_path, i, coverage, exec_time)
+        if new_edge_covered:
+            print(f"Seed {seed_file} covers new edges, saving to the queue...")
+            new_seed_path = os.path.join(conf["queue_folder"], f"seed_{len(seed_queue)}.bin")
+            shutil.copyfile(conf["current_input"], new_seed_path)
 
+        new_seed = Seed(seed_path, i, coverage, exec_time)
         seed_queue.append(new_seed)
 
     print("Dry run finished. Now starting the fuzzing loop...")
@@ -93,6 +101,13 @@ def run_fuzzing(conf, st_read_fd, ctl_write_fd, trace_bits):
             if new_edge_covered:
                 print("Found new coverage!")
                 # TODO: save the current test input as a new seed
+                new_seed_path = os.path.join(conf["queue_folder"], f"seed_{len(seed_queue)}.bin")
+                shutil.copyfile(conf["current_input"], new_seed_path)
+                print(f"Saved new seed to {new_seed_path}")
+
+                # Add the new seed to the queue
+                new_seed = Seed(new_seed_path, len(seed_queue), coverage, exec_time)
+                seed_queue.append(new_seed)
                 continue
 
 
@@ -100,9 +115,9 @@ def main():
 
     print("====== Welcome to use Mini-Lop ======")
 
-    parser = argparse.ArgumentParser(description='Mini-Lop: A lightweight grey-box fuzzer')
+    parser = argparse.ArgumentParser(description="Mini-Lop: A lightweight grey-box fuzzer")
 
-    parser.add_argument('--config', '-c', required=True, help='Path to config file', type=str)
+    parser.add_argument("--config", "-c", required=True, help="Path to config file", type=str)
 
     args = parser.parse_args()
 
@@ -137,5 +152,5 @@ def main():
         run_fuzzing(conf, st_read_fd, ctl_write_fd, trace_bits)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
