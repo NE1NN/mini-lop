@@ -46,6 +46,7 @@ def run_fuzzing(conf, st_read_fd, ctl_write_fd, trace_bits):
         print("forkserver is up! starting fuzzing... press Ctrl+C to stop")
 
     seed_queue = []
+    global_coverage = set()
     # do the dry run, check if the target is working and initialize the seed queue
     shutil.copytree(conf["seeds_folder"], conf["queue_folder"])
     for i, seed_file in enumerate(os.listdir(conf["queue_folder"])):
@@ -63,7 +64,7 @@ def run_fuzzing(conf, st_read_fd, ctl_write_fd, trace_bits):
             print(f"Seed {seed_file} caused a crash during the dry run")
             sys.exit(0)
 
-        new_edge_covered, coverage = check_coverage(trace_bits)
+        new_edge_covered, coverage = check_coverage(trace_bits, global_coverage)
         new_seed = Seed(seed_path, i, coverage, exec_time)
         seed_queue.append(new_seed)
 
@@ -90,7 +91,7 @@ def run_fuzzing(conf, st_read_fd, ctl_write_fd, trace_bits):
                 # TODO: save the crashing input
                 continue
 
-            new_edge_covered, coverage = check_coverage(trace_bits)
+            new_edge_covered, coverage = check_coverage(trace_bits, global_coverage)
 
             if new_edge_covered:
                 # Save the current test input as a new seed

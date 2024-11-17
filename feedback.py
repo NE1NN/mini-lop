@@ -6,8 +6,6 @@ SHM_ENV_VAR   = "__AFL_SHM_ID"
 MAP_SIZE_POW2 = 16
 MAP_SIZE = (1 << MAP_SIZE_POW2)
 
-global_coverage = set()
-
 def setup_shm(libc):
     # map functions
     shmget = libc.shmget
@@ -52,17 +50,12 @@ def check_crash(status_code):
     return crashed
 
 
-def check_coverage(trace_bits):
-    global global_coverage
-    
+def check_coverage(trace_bits, global_coverage):    
     raw_bitmap = ctypes.string_at(trace_bits, MAP_SIZE)
     new_edge_covered = False
-    
-    local_coverage = set()
-    
+        
     total_hits = 0
     new_edge_covered = False
-    
     
     for idx, byte in enumerate(raw_bitmap):
         if byte != 0:
@@ -70,9 +63,8 @@ def check_coverage(trace_bits):
             if idx not in global_coverage:
                 new_edge_covered = True  
                 global_coverage.add(idx) 
-                local_coverage.add(idx)
 
-    print(f'Covered {total_hits} edges. New edges: {len(local_coverage)}')
+    print(f'Covered {total_hits} edges')
     print(f"Global coverage: {len(global_coverage)} edges discovered")    
         
     return new_edge_covered, total_hits
