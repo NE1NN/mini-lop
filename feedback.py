@@ -76,9 +76,3 @@ def check_coverage(trace_bits):
     print(f"Global coverage: {len(global_coverage)} edges discovered")    
         
     return new_edge_covered, total_hits
-
-# def save_new_seed(queue_folder, seed_data):
-#     seed_file = f"{queue_folder}/seed_{len(global_coverage)}.bin"
-#     with open(seed_file, "wb") as f:
-#         f.write(seed_data)
-#     print(f"Saved new seed to {seed_file}")

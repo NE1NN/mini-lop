@@ -64,12 +64,6 @@ def run_fuzzing(conf, st_read_fd, ctl_write_fd, trace_bits):
             sys.exit(0)
 
         new_edge_covered, coverage = check_coverage(trace_bits)
-
-        if new_edge_covered:
-            print(f"Seed {seed_file} covers new edges, saving to the queue...")
-            new_seed_path = os.path.join(conf["queue_folder"], f"seed_{len(seed_queue)}.bin")
-            shutil.copyfile(conf["current_input"], new_seed_path)
-
         new_seed = Seed(seed_path, i, coverage, exec_time)
         seed_queue.append(new_seed)
 
@@ -99,16 +93,13 @@ def run_fuzzing(conf, st_read_fd, ctl_write_fd, trace_bits):
             new_edge_covered, coverage = check_coverage(trace_bits)
 
             if new_edge_covered:
-                print("Found new coverage!")
-                # TODO: save the current test input as a new seed
+                # Save the current test input as a new seed
                 new_seed_path = os.path.join(conf["queue_folder"], f"seed_{len(seed_queue)}.bin")
                 shutil.copyfile(conf["current_input"], new_seed_path)
-                print(f"Saved new seed to {new_seed_path}")
 
                 # Add the new seed to the queue
                 new_seed = Seed(new_seed_path, len(seed_queue), coverage, exec_time)
                 seed_queue.append(new_seed)
-                continue
 
 
 def main():
