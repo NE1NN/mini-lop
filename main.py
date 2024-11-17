@@ -9,7 +9,7 @@ from execution import run_target
 from feedback import SHM_ENV_VAR, check_coverage, check_crash, clear_shm, setup_shm
 from libc import get_libc
 from mutation import havoc_mutation
-from schedule import get_power_schedule, select_next_seed
+from schedule import calculate_avg, get_power_schedule, select_next_seed
 from seed import Seed
 
 
@@ -77,15 +77,7 @@ def run_fuzzing(conf, st_read_fd, ctl_write_fd, trace_bits):
     # start the fuzzing loop
     while True:
         selected_seed, cycle_count = select_next_seed(seed_queue, cycle_count)
-
-        if processed_seeds > 0:
-            avg_exec_time = total_exec_time / processed_seeds
-            avg_coverage = total_coverage / processed_seeds
-        else:
-            # Some default value
-            avg_exec_time = 1000
-            avg_coverage = 10
-
+        avg_exec_time, avg_coverage = calculate_avg(total_exec_time, total_coverage, processed_seeds)
         power_schedule = get_power_schedule(selected_seed, avg_exec_time, avg_coverage)
 
         # generate new test inputs according to the power schedule for the selected seed
