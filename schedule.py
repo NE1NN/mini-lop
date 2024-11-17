@@ -1,9 +1,7 @@
 import random
 
 
-def select_next_seed(seed_queue):
-    # this is a dummy implementation, it just randomly selects a seed
-    # TODO: implement the "favor" feature of AFL
+def select_next_seed(seed_queue, cycle_count):
     for seed in seed_queue:
         file_size = seed.get_file_size()
         seed.priority = seed.exec_time * file_size
@@ -16,16 +14,26 @@ def select_next_seed(seed_queue):
         else:
             seed.unmark_favored()
     
+    unused_seeds = [seed for seed in seed_queue if not seed.used_in_cycle]
+    # All seeds have been used, start a new cycle
+    if not unused_seeds:  
+        cycle_count += 1
+        print(f"Starting a new cycle: {cycle_count}")
+        for seed in seed_queue:
+            # Reset usage for the new cycle
+            seed.used_in_cycle = False  
+        unused_seeds = seed_queue 
+    
     favored_seeds = [seed for seed in seed_queue if seed.favored]
     non_favored_seeds = [seed for seed in seed_queue if not seed.favored]
 
     if random.random() < 0.8 and favored_seeds:  # 80% chance for favored
-        return random.choice(favored_seeds)
+        selected = random.choice(favored_seeds)
     else:  # 20% chance for non-favored
-        return random.choice(non_favored_seeds) if non_favored_seeds else random.choice(seed_queue)
-
+        selected = random.choice(non_favored_seeds) if non_favored_seeds else random.choice(unused_seeds)
     
-
+    selected.used_in_cycle = True
+    return selected, cycle_count
 
 # get the power schedule (# of new test inputs to generate for a seed)
 def get_power_schedule(seed):

@@ -46,6 +46,7 @@ def run_fuzzing(conf, st_read_fd, ctl_write_fd, trace_bits):
         print("forkserver is up! starting fuzzing... press Ctrl+C to stop")
 
     seed_queue = []
+    cycle_count = 0
     global_coverage = set()
     # do the dry run, check if the target is working and initialize the seed queue
     shutil.copytree(conf["seeds_folder"], conf["queue_folder"])
@@ -71,7 +72,7 @@ def run_fuzzing(conf, st_read_fd, ctl_write_fd, trace_bits):
     print("Dry run finished. Now starting the fuzzing loop...")
     # start the fuzzing loop
     while True:
-        selected_seed = select_next_seed(seed_queue)
+        selected_seed, cycle_count = select_next_seed(seed_queue, cycle_count)
 
         power_schedule = get_power_schedule(selected_seed)
 

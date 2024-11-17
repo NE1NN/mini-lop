@@ -10,6 +10,7 @@ class Seed:
         # by default, a seed is not marked as favored
         self.favored = 0
         self.priority = "inf"
+        self.used_in_cycle = False
 
     def mark_favored(self):
         self.favored = 1
