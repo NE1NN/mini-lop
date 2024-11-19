@@ -1,4 +1,5 @@
 import argparse
+import random
 import signal
 import sys
 import os
@@ -8,7 +9,7 @@ from conf import parse_config
 from execution import run_target
 from feedback import SHM_ENV_VAR, check_coverage, check_crash, clear_shm, setup_shm
 from libc import get_libc
-from mutation import havoc_mutation
+from mutation import havoc_mutation, splice_mutation
 from schedule import calculate_avg, get_power_schedule, select_next_seed
 from seed import Seed
 
@@ -77,13 +78,18 @@ def run_fuzzing(conf, st_read_fd, ctl_write_fd, trace_bits):
     # start the fuzzing loop
     while True:
         selected_seed, cycle_count = select_next_seed(seed_queue, cycle_count)
-        avg_exec_time, avg_coverage = calculate_avg(total_exec_time, total_coverage, processed_seeds)
+        avg_exec_time, avg_coverage = calculate_avg(
+            total_exec_time, total_coverage, processed_seeds
+        )
         power_schedule = get_power_schedule(selected_seed, avg_exec_time, avg_coverage)
 
         # generate new test inputs according to the power schedule for the selected seed
         for i in range(0, power_schedule):
-            # TODO: implement the strategy for selecting a mutation operator
-            havoc_mutation(conf, selected_seed)
+            # Randomly select which mutator to use
+            if random.random() < 0.5:  # 50% chance
+                havoc_mutation(conf, selected_seed)
+            else:
+                splice_mutation(conf, selected_seed, seed_queue)
             # run the target with the mutated seed
             status_code, exec_time = run_target(ctl_write_fd, st_read_fd, trace_bits)
 
