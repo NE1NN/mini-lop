@@ -24,8 +24,8 @@ def select_next_seed(seed_queue, cycle_count):
             seed.used_in_cycle = False
         unused_seeds = seed_queue
 
-    favored_seeds = [seed for seed in seed_queue if seed.favored]
-    non_favored_seeds = [seed for seed in seed_queue if not seed.favored]
+    favored_seeds = [seed for seed in unused_seeds if seed.favored]
+    non_favored_seeds = [seed for seed in unused_seeds if not seed.favored]
 
     if random.random() < 0.8 and favored_seeds:  # 80% chance for favored
         selected = random.choice(favored_seeds)
