@@ -69,8 +69,7 @@ def get_power_schedule(seed, avg_exec_time, avg_coverage):
     )
 
     combined_score = exec_score + coverage_score
-    # Limit the score to 10
-    return max(1, min(int(combined_score / 10), 10))
+    return int(combined_score / 100)
 
 
 def calculate_avg(total_exec_time, total_coverage, processed_seeds):
