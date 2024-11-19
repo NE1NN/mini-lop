@@ -49,6 +49,7 @@ def run_fuzzing(conf, st_read_fd, ctl_write_fd, trace_bits):
     seed_queue = []
     cycle_count = 0
     global_coverage = set()
+
     # do the dry run, check if the target is working and initialize the seed queue
     shutil.copytree(conf["seeds_folder"], conf["queue_folder"])
     for i, seed_file in enumerate(os.listdir(conf["queue_folder"])):
@@ -114,7 +115,7 @@ def run_fuzzing(conf, st_read_fd, ctl_write_fd, trace_bits):
 
             if new_edge_covered:
                 # Save the current test input as a new seed
-                new_seed_path = os.path.join(conf["queue_folder"], f"seed_{len(seed_queue)}.bin")
+                new_seed_path = os.path.join(conf["queue_folder"], f"test_{len(seed_queue)}.js")
                 shutil.copyfile(conf["current_input"], new_seed_path)
 
                 # Add the new seed to the queue
