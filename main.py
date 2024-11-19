@@ -102,7 +102,7 @@ def run_fuzzing(conf, st_read_fd, ctl_write_fd, trace_bits):
                 print(f"Found a crash, status code is {status_code}")
                 # TODO: save the crashing input
                 crash_path = os.path.join(
-                    conf["crashes_folder"], f"crash_{len(os.listdir(conf['crashes_folder']))}.bin"
+                    conf["crashes_folder"], f"err_{len(os.listdir(conf['crashes_folder']))}.js"
                 )
                 shutil.copyfile(conf["current_input"], crash_path)
                 continue
