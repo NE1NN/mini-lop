@@ -36,38 +36,57 @@ def havoc_mutation(conf, seed):
     with open(seed.path, "rb") as f:
         data = bytearray(f.read())
 
-        data_len = len(data)
+    data_len = len(data)
 
-        for _ in range(random.randint(1, data_len)):
-            mutation_type = random.choice(["bit_flip", "add_sub", "replace_value", "replace_chunk"])
+    mutation_type = random.choice(["add_sub", "replace_value", "replace_chunk"])
 
-            if mutation_type == "bit_flip":
-                # Flip a random bit in the data
-                byte_idx = random.randint(0, data_len - 1)
-                bit_idx = random.randint(0, 7)
-                data[byte_idx] ^= 1 << bit_idx
+    # if mutation_type == "bit_flip":
+    #     # Flip a random bit in the data
+    #     byte_idx = random.randint(0, data_len - 1)
+    #     bit_idx = random.randint(0, 7)
+    #     data[byte_idx] ^= 1 << bit_idx
 
-            elif mutation_type == "add_sub":
-                # Add or subtract a random value to/from a byte
-                byte_idx = random.randint(0, data_len - 1)
-                data[byte_idx] = (data[byte_idx] + random.choice([-1, 1])) % 256
+    if mutation_type == "add_sub":
+        # Add or subtract a random value to/from a byte
+        size = random.choice([2, 4, 8])
+        if data_len < size:
+            return 
+        position = random.randint(0, data_len - size)
+        
+        selected_bytes = data[position:position + size]
+        value = int.from_bytes(selected_bytes, byteorder="little", signed=True)
+        mutated_value = value + random.randint(-100, 100)  # Add/sub random value
+        
+        min_value = -(2**(size * 8 - 1))
+        max_value = 2**(size * 8 - 1) - 1
+        mutated_value = max(min_value, min(max_value, mutated_value))
+        
+        mutated_bytes = mutated_value.to_bytes(size, byteorder="little", signed=True)
+        data[position:position + size] = mutated_bytes
 
-            elif mutation_type == "replace_value":
-                # Replace a byte with an interesting value
-                byte_idx = random.randint(0, data_len - 1)
-                interesting_values = [0x00, 0xFF, 0x7F, 0x80, 0x01]
-                data[byte_idx] = random.choice(interesting_values)
+    elif mutation_type == "replace_value":
+        # Replace a byte with an interesting value
+        size = random.choice([2, 4, 8])
+        if data_len < size:
+            return
+        position = random.randint(0, data_len - size)
 
-            elif mutation_type == "replace_chunk":
-                # Replace a random chunk with another chunk
-                if data_len > 1:
-                    start_idx = random.randint(0, data_len - 2)
-                    end_idx = random.randint(start_idx + 1, data_len - 1)
-                    chunk_len = end_idx - start_idx
-                    chunk = data[start_idx:end_idx]
-                    insert_idx = random.randint(0, data_len - chunk_len)
-                    data[insert_idx : insert_idx + chunk_len] = chunk
+        # Replace with interesting values
+        interesting_values = [0, -1, 1, 2**(size * 8 - 1) - 1, -(2**(size * 8 - 1))]
+        value = random.choice(interesting_values)
+        mutated_bytes = value.to_bytes(size, byteorder="little", signed=True)
+        data[position:position + size] = mutated_bytes
 
-        # write the mutated data back to the current input file
-        with open(conf["current_input"], "wb") as f_out:
-            f_out.write(data)
+    elif mutation_type == "replace_chunk":
+        # Replace a random chunk with another chunk
+        if data_len < 2:
+            return
+        chunk_len = random.randint(1, data_len // 2)  # Random chunk length
+        pos1 = random.randint(0, data_len - chunk_len)
+        pos2 = random.randint(0, data_len - chunk_len)
+        chunk1 = data[pos1:pos1 + chunk_len]
+        data[pos2:pos2 + chunk_len] = chunk1
+
+    # write the mutated data back to the current input file
+    with open(conf["current_input"], "wb") as f_out:
+        f_out.write(data)
