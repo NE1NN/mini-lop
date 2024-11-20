@@ -75,7 +75,7 @@ def get_power_schedule(seed, avg_exec_time, avg_coverage):
     if perf_score > HAVOC_MAX_MULT * 100:
         perf_score = HAVOC_MAX_MULT * 100
 
-    return perf_score
+    return int(perf_score)
 
 
 def calculate_avg(total_exec_time, total_coverage, processed_seeds):
