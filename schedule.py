@@ -41,35 +41,41 @@ def select_next_seed(seed_queue, cycle_count):
 # get the power schedule (# of new test inputs to generate for a seed)
 def get_power_schedule(seed, avg_exec_time, avg_coverage):
     # AFL's implementation without depth and handicap
-    exec_score = (
-        300
-        if seed.exec_time * 0.25 < avg_exec_time
-        else (
-            200
-            if seed.exec_time * 0.5 < avg_exec_time
-            else (
-                150
-                if seed.exec_time * 0.75 < avg_exec_time
-                else (
-                    100
-                    if seed.exec_time < avg_exec_time
-                    else 50 if seed.exec_time > avg_exec_time * 4 else 25
-                )
-            )
-        )
-    )
-    coverage_score = (
-        300
-        if seed.coverage > avg_coverage * 1.5
-        else (
-            200
-            if seed.coverage > avg_coverage
-            else 150 if seed.coverage > avg_coverage * 0.75 else 100
-        )
-    )
+    HAVOC_MAX_MULT = 16
+    perf_score = 0
 
-    combined_score = exec_score + coverage_score
-    return int(combined_score / 100)
+    if seed.exec_time * 0.1 > avg_exec_time:
+        perf_score = 10
+    elif seed.exec_time * 0.25 > avg_exec_time:
+        perf_score = 25
+    elif seed.exec_time * 0.5 > avg_exec_time:
+        perf_score = 50
+    elif seed.exec_time * 0.75 > avg_exec_time:
+        perf_score = 75
+    elif seed.exec_time * 4 < avg_exec_time:
+        perf_score = 300
+    elif seed.exec_time * 3 < avg_exec_time:
+        perf_score = 200
+    elif seed.exec_time * 2 < avg_exec_time:
+        perf_score = 150
+
+    if seed.coverage * 0.3 > avg_coverage:
+        perf_score *= 3
+    elif seed.coverage * 0.5 > avg_coverage:
+        perf_score *= 2
+    elif seed.coverage * 0.75 > avg_coverage:
+        perf_score *= 1.5
+    elif seed.coverage * 3 < avg_coverage:
+        perf_score *= 0.25
+    elif seed.coverage * 2 < avg_coverage:
+        perf_score *= 0.5
+    elif seed.coverage * 1.5 < avg_coverage:
+        perf_score *= 0.75
+
+    if perf_score > HAVOC_MAX_MULT * 100:
+        perf_score = HAVOC_MAX_MULT * 100
+
+    return perf_score
 
 
 def calculate_avg(total_exec_time, total_coverage, processed_seeds):
