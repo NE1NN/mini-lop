@@ -1,7 +1,7 @@
 import random
 
 
-def select_next_seed(seed_queue, cycle_count):
+def select_next_seed(seed_queue):
     for seed in seed_queue:
         file_size = seed.get_file_size()
         seed.priority = seed.exec_time * file_size
@@ -9,7 +9,7 @@ def select_next_seed(seed_queue, cycle_count):
     seed_queue.sort(key=lambda s: s.priority)
 
     for i, seed in enumerate(seed_queue):
-        if i == 0:
+        if i < len(seed_queue) // 2:
             seed.mark_favored()
         else:
             seed.unmark_favored()
@@ -17,8 +17,6 @@ def select_next_seed(seed_queue, cycle_count):
     unused_seeds = [seed for seed in seed_queue if not seed.used_in_cycle]
     # All seeds have been used, start a new cycle
     if not unused_seeds:
-        cycle_count += 1
-        print(f"Starting a new cycle: {cycle_count}")
         for seed in seed_queue:
             # Reset usage for the new cycle
             seed.used_in_cycle = False
@@ -35,7 +33,7 @@ def select_next_seed(seed_queue, cycle_count):
         )
 
     selected.used_in_cycle = True
-    return selected, cycle_count
+    return selected
 
 
 # get the power schedule (# of new test inputs to generate for a seed)

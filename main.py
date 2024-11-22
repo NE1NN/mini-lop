@@ -47,7 +47,6 @@ def run_fuzzing(conf, st_read_fd, ctl_write_fd, trace_bits):
         print("forkserver is up! starting fuzzing... press Ctrl+C to stop")
 
     seed_queue = []
-    cycle_count = 0
     global_coverage = set()
 
     # do the dry run, check if the target is working and initialize the seed queue
@@ -78,7 +77,7 @@ def run_fuzzing(conf, st_read_fd, ctl_write_fd, trace_bits):
     processed_seeds = 0
     # start the fuzzing loop
     while True:
-        selected_seed, cycle_count = select_next_seed(seed_queue, cycle_count)
+        selected_seed = select_next_seed(seed_queue)
         avg_exec_time, avg_coverage = calculate_avg(
             total_exec_time, total_coverage, processed_seeds
         )
@@ -87,10 +86,10 @@ def run_fuzzing(conf, st_read_fd, ctl_write_fd, trace_bits):
         # generate new test inputs according to the power schedule for the selected seed
         for i in range(0, power_schedule):
             # Randomly select which mutator to use
-            if random.random() < 0.5:  # 50% chance
-                havoc_mutation(conf, selected_seed)
-            else:
-                splice_mutation(conf, selected_seed, seed_queue)
+            # if random.random() < 0.5:  # 50% chance
+            havoc_mutation(conf, selected_seed)
+            # else:
+            #     splice_mutation(conf, selected_seed, seed_queue)
             # run the target with the mutated seed
             status_code, exec_time = run_target(ctl_write_fd, st_read_fd, trace_bits)
 
