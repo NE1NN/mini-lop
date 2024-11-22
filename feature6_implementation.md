@@ -5,6 +5,6 @@ I added a function called splice_mutation in mutation.py, which implements a spl
 4. Apply the havoc_mutation function to the newly generated test input to introduce additional randomness
 5. Yield the mutated test input for execution
 
-Since the havoc_mutator was already implemented in feature 5, I just called that function at the end of splice_mutation function.
+As mentioned in feature5_implementation.md, I called havoc_mutation_operation function at the end of splice_mutation function to apply havoc_mutation operations and then used save_to_input to save the mutated seed to current_input
 
 Now that I have 2 mutators, I updated main.py to randomly select between them with a 50% chance for each
