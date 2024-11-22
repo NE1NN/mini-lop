@@ -19,20 +19,22 @@ def splice_mutation(conf, seed, seed_queue):
 
     spliced_data = data1[:splice_point1] + data2[splice_point2:]
 
-    with open(conf["current_input"], "wb") as f:
-        f.write(spliced_data)
-
     # Apply havoc mutation on the spliced file
-    havoc_mutation(conf, seed)
+    data = havoc_mutation_operation(spliced_data)
+    save_to_input(conf, data)
 
 
 def havoc_mutation(conf, seed):
     with open(seed.path, "rb") as f:
         data = bytearray(f.read())
 
+    data = havoc_mutation_operation(data)
+    save_to_input(conf, data)
+
+def havoc_mutation_operation(data):
     data_len = len(data)
 
-    mutation_type = random.choice(["add_sub", "replace_value", "replace_chunk"])
+    # mutation_type = random.choice(["add_sub", "replace_value", "replace_chunk"])
 
     # if mutation_type == "bit_flip":
     #     # Flip a random bit in the data
@@ -43,7 +45,7 @@ def havoc_mutation(conf, seed):
     # Add or subtract a random value to/from a byte
     size = random.choice([2, 4, 8])
     if data_len < size:
-        return
+        return data
     position = random.randint(0, data_len - size)
 
     selected_bytes = data[position : position + size]
@@ -60,7 +62,7 @@ def havoc_mutation(conf, seed):
     # Replace a byte with an interesting value
     size = random.choice([2, 4, 8])
     if data_len < size:
-        return
+        return data
     position = random.randint(0, data_len - size)
 
     # Replace with interesting values
@@ -71,13 +73,16 @@ def havoc_mutation(conf, seed):
 
     # Replace a random chunk with another chunk
     if data_len < 2:
-        return
+        return data
     chunk_len = random.randint(1, data_len // 2)  # Random chunk length
     pos1 = random.randint(0, data_len - chunk_len)
     pos2 = random.randint(0, data_len - chunk_len)
     chunk1 = data[pos1 : pos1 + chunk_len]
     data[pos2 : pos2 + chunk_len] = chunk1
+    
+    return data
+    
 
-    # write the mutated data back to the current input file
+def save_to_input(conf, data):
     with open(conf["current_input"], "wb") as f_out:
         f_out.write(data)

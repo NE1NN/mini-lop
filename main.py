@@ -86,10 +86,10 @@ def run_fuzzing(conf, st_read_fd, ctl_write_fd, trace_bits):
         # generate new test inputs according to the power schedule for the selected seed
         for i in range(0, power_schedule):
             # Randomly select which mutator to use
-            # if random.random() < 0.5:  # 50% chance
-            havoc_mutation(conf, selected_seed)
-            # else:
-            #     splice_mutation(conf, selected_seed, seed_queue)
+            if random.random() < 0.5:  # 50% chance
+                havoc_mutation(conf, selected_seed)
+            else:
+                splice_mutation(conf, selected_seed, seed_queue)
             # run the target with the mutated seed
             status_code, exec_time = run_target(ctl_write_fd, st_read_fd, trace_bits)
 
