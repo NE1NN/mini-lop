@@ -80,9 +80,10 @@ def replace_chunk(data):
     data[pos2 : pos2 + chunk_len] = chunk1
 
 def havoc_mutation_operation(data):    
-    data = add_random_value(data)
-    data = replace_byte(data)
-    data = replace_chunk(data)
+    mutation_functions = [add_random_value, replace_byte, replace_chunk]
+    for mutation in mutation_functions:
+        data = mutation(data)
+        
     return data
     
 
