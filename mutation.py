@@ -41,8 +41,10 @@ def add_random_value(data):
 
     selected_bytes = data[position : position + size]
     value = int.from_bytes(selected_bytes, byteorder="little", signed=True)
-    mutated_value = value + random.randint(-100, 100)  # Add/sub random value
+    # Add/sub random value
+    mutated_value = value + random.randint(-100, 100)  
 
+    # Cap to prevent overflow
     min_value = -(2 ** (size * 8 - 1))
     max_value = 2 ** (size * 8 - 1) - 1
     mutated_value = max(min_value, min(max_value, mutated_value))
@@ -73,7 +75,8 @@ def replace_chunk(data):
     
     if data_len < 2:
         return data
-    chunk_len = random.randint(1, data_len // 2)  # Random chunk length
+    # Random chunk length
+    chunk_len = random.randint(1, data_len // 2)  
     pos1 = random.randint(0, data_len - chunk_len)
     pos2 = random.randint(0, data_len - chunk_len)
     chunk1 = data[pos1 : pos1 + chunk_len]
