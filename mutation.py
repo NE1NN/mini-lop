@@ -31,18 +31,9 @@ def havoc_mutation(conf, seed):
     data = havoc_mutation_operation(data)
     save_to_input(conf, data)
 
-def havoc_mutation_operation(data):
+def add_random_value(data):
     data_len = len(data)
-
-    # mutation_type = random.choice(["add_sub", "replace_value", "replace_chunk"])
-
-    # if mutation_type == "bit_flip":
-    #     # Flip a random bit in the data
-    #     byte_idx = random.randint(0, data_len - 1)
-    #     bit_idx = random.randint(0, 7)
-    #     data[byte_idx] ^= 1 << bit_idx
-
-    # Add or subtract a random value to/from a byte
+    
     size = random.choice([2, 4, 8])
     if data_len < size:
         return data
@@ -58,8 +49,12 @@ def havoc_mutation_operation(data):
 
     mutated_bytes = mutated_value.to_bytes(size, byteorder="little", signed=True)
     data[position : position + size] = mutated_bytes
+    
+    return data
 
-    # Replace a byte with an interesting value
+def replace_byte(data):
+    data_len = len(data)
+    
     size = random.choice([2, 4, 8])
     if data_len < size:
         return data
@@ -70,8 +65,12 @@ def havoc_mutation_operation(data):
     value = random.choice(interesting_values)
     mutated_bytes = value.to_bytes(size, byteorder="little", signed=True)
     data[position : position + size] = mutated_bytes
+    
+    return data
 
-    # Replace a random chunk with another chunk
+def replace_chunk(data):
+    data_len = len(data)
+    
     if data_len < 2:
         return data
     chunk_len = random.randint(1, data_len // 2)  # Random chunk length
@@ -79,7 +78,11 @@ def havoc_mutation_operation(data):
     pos2 = random.randint(0, data_len - chunk_len)
     chunk1 = data[pos1 : pos1 + chunk_len]
     data[pos2 : pos2 + chunk_len] = chunk1
-    
+
+def havoc_mutation_operation(data):    
+    data = add_random_value(data)
+    data = replace_byte(data)
+    data = replace_chunk(data)
     return data
     
 
