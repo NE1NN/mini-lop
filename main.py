@@ -99,7 +99,6 @@ def run_fuzzing(conf, st_read_fd, ctl_write_fd, trace_bits):
 
             if check_crash(status_code):
                 print(f"Found a crash, status code is {status_code}")
-                # TODO: save the crashing input
                 crash_path = os.path.join(
                     conf["crashes_folder"], f"err_{len(os.listdir(conf['crashes_folder']))}.js"
                 )
